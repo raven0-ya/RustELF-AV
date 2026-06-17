@@ -4,8 +4,8 @@
 
 Disclaimer: This is only a hobby project and I DON'T recommend this for malware analysis.
 
-![Language: Rust](https://img.shields.io/badge/Language-Rust-000000?logo=rust&logoColor=white)
-![OS: Linux](https://img.shields.io/badge/OS-Linux-FCC624?logo=linux&logoColor=black)
+![Language: Rust](https://img.shields.io/badge/Language-Rust-000000?logo=rust&logoColor=red)
+![Platform: Linux](https://img.shields.io/badge/OS-Linux-FCC624?logo=linux&logoColor=black)
 
 ---
 
