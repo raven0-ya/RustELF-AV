@@ -35,11 +35,13 @@ The project is structured modularly to ensure high performance and easy maintain
 Ensure you have Rust and `cargo` installed on your Linux machine. Please know that this is only a hobby project.
 
 ```bash
-# Clone the repository
-git clone [https://github.com/raven0-ya/RustELF-AV.git](https://github.com/raven0-ya/RustELF-AV.git)
+# 1. Clone the repository
+git clone https://github.com/raven0-ya/RustELF-AV.git
+
+# 2. Change into the newly created directory
 cd RustELF-AV
 
-# Build the project in release mode
+# 3. Build the Rust project
 cargo build --release
 ```
 
