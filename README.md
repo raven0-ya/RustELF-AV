@@ -2,7 +2,7 @@
 
 `RustELF-AV` is a fast, lightweight, and highly customizable command-line Anti-Virus (AV) scanner for Linux systems, written entirely in Rust. It specializes in parsing ELF binaries and detecting anomalies, known threats, and zero-day malware using a hybrid approach of **Heuristic Analysis** and **Machine Learning**.
 
-Built for system administrators, security researchers, and power users who want a transparent, hackable, and modern security tool.
+Disclaimer: This is only a hobby project and I DON'T recommend this for malware analysis.
 
 ![Language: Rust](https://img.shields.io/badge/Language-Rust-000000?logo=rust&logoColor=white)
 ![OS: Linux](https://img.shields.io/badge/OS-Linux-FCC624?logo=linux&logoColor=black)
@@ -51,3 +51,4 @@ cargo build --release
 
 ```bash
 ./target/release/elf-scanner --help
+```
