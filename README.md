@@ -50,4 +50,4 @@ cargo build --release
 ## ✅ How to Use
 
 ```bash
-./target/release/RustELF-AV -h
+./target/release/elf-scanner --help
