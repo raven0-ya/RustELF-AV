@@ -4,6 +4,9 @@
 
 Built for system administrators, security researchers, and power users who want a transparent, hackable, and modern security tool.
 
+![Language: Rust](https://img.shields.io/badge/Language-Rust-000000?logo=rust&logoColor=white)
+![OS: Linux](https://img.shields.io/badge/OS-Linux-FCC624?logo=linux&logoColor=black)
+
 ---
 
 ## 🏗️ Project Architecture & Modules
