@@ -41,3 +41,11 @@ cd RustELF-AV
 
 # Build the project in release mode
 cargo build --release
+```
+
+---
+
+## ✅ How to Use
+
+```bash
+./target/release/RustELF-AV -h
