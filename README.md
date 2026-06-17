@@ -1,2 +1,40 @@
-# RustELF-AV
-A customizable Linux Anti-Virus powered by Rust, utilizing Heuristics and Machine Learning to secure ELF binaries.
+# 🛡️ RustELF-AV
+
+`RustELF-AV` is a fast, lightweight, and highly customizable command-line Anti-Virus (AV) scanner for Linux systems, written entirely in Rust. It specializes in parsing ELF binaries and detecting anomalies, known threats, and zero-day malware using a hybrid approach of **Heuristic Analysis** and **Machine Learning**.
+
+Built for system administrators, security researchers, and power users who want a transparent, hackable, and modern security tool.
+
+---
+
+## 🏗️ Project Architecture & Modules
+
+The project is structured modularly to ensure high performance and easy maintainability:
+
+* **`main.rs`**: Entry point. Handles CLI arguments, user configurations, and orchestrates the scanning pipeline.
+* **`scanner.rs`**: Directory traversal engine. Uses `walkdir` to efficiently discover ELF binaries across the filesystem.
+* **`features.rs`**: Binary extraction layer. Leverages `goblin` to safely parse ELF headers, sections, and symbols to build feature vectors.
+* **`heuristics.rs`**: Rule-based detection engine. Analyzes static anomalies, suspicious syscalls, and entry-point deviations.
+* **`classifier.rs`**: Machine Learning inference module. Classifies extracted feature vectors to detect zero-day or heavily obfuscated malware.
+
+---
+
+## ✨ Features
+
+* **🦀 Powered by Rust & Goblin:** Blazing-fast execution, zero-cost abstractions, and memory safety.
+* **🧠 Hybrid Detection:** Combined power of heuristic rule matching and statistical ML classification.
+* **🎛️ Highly Customizable:** Fully adjustable detection thresholds. Devs can tweak weights inside the classifier or add custom heuristic rules easily.
+* **📊 Structured Output:** Ready to be paired with `serde_json` for structured telemetry output (perfect for SIEM integration).
+
+---
+
+## 🛠️ Installation & Build
+
+Ensure you have Rust and `cargo` installed on your Linux machine. Please know that this is only a hobby project.
+
+```bash
+# Clone the repository
+git clone [https://github.com/raven0-ya/RustELF-AV.git](https://github.com/raven0-ya/RustELF-AV.git)
+cd RustELF-AV
+
+# Build the project in release mode
+cargo build --release
