@@ -7,8 +7,8 @@ mod features;
 mod heuristics;
 mod scanner;
 
-use scanner::ScanResult;
 use crate::classifier::Model;
+use scanner::ScanResult;
 
 /// ELF Anti-Virus Scanner - Heuristic + ML detection for Linux binaries
 #[derive(Parser)]
@@ -16,12 +16,15 @@ use crate::classifier::Model;
 struct Args {
     /// Path(s) to scan (file or directory)
     path: Vec<PathBuf>,
+
     /// Recursively scan directories
     #[arg(short, long)]
     recursive: bool,
+
     /// Show detailed analysis
     #[arg(short, long)]
     verbose: bool,
+
     /// Output format (text or json)
     #[arg(short = 'o', long, default_value = "text")]
     output: String,
@@ -45,21 +48,28 @@ fn display_result_text(result: &ScanResult, verbose: bool) {
     println!("│ File: {}", filename);
     println!("│ Size: {} bytes", result.file_size);
     println!("├──────────────────────────────────────────────────────────┤");
+
     if result.is_elf {
         println!(
             "│ Heuristics: {:.1}/100                                      │",
             result.heuristic_normalized
         );
-        println!("│ ML Score:   {:.1}/100                                      │", result.ml_score);
+
+        println!(
+            "│ ML Score:   {:.1}/100                                      │",
+            result.ml_score
+        );
+
         println!(
             "│ Combined:   {:.1}/100                                      │",
             result.combined_score
         );
+
         println!(
             "│ Verdict:    {} (threshold: {:.0})                   │",
-            result.classification, model.threshold
+            result.classification,
+            model.threshold
         );
-
 
         println!("├──────────────────────────────────────────────────────────┤");
         println!("│ Findings:                                                 │");
@@ -72,13 +82,20 @@ fn display_result_text(result: &ScanResult, verbose: bool) {
                     hr.name,
                     hr.score
                 );
+
                 if verbose {
                     println!("│   {}", hr.detail);
                 }
             }
         } else {
             let mut sorted = result.heuristic_results.clone();
-            sorted.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+
+            sorted.sort_by(|a, b| {
+                b.score
+                    .partial_cmp(&a.score)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
+
             for hr in sorted.iter().take(4) {
                 println!(
                     "│ \u{2022} [{:>8}] {:<39} {:>7.0} pts │",
@@ -87,9 +104,14 @@ fn display_result_text(result: &ScanResult, verbose: bool) {
                     hr.score
                 );
             }
-            let remaining = sorted.len() - 4;
+
+            let remaining = sorted.len().saturating_sub(4);
+
             if remaining > 0 {
-                println!("│   ... and {} more findings (use -v for all)                │", remaining);
+                println!(
+                    "│   ... and {} more findings (use -v for all)                │",
+                    remaining
+                );
             }
         }
 
@@ -97,36 +119,43 @@ fn display_result_text(result: &ScanResult, verbose: bool) {
         println!("│ Top ML features:                                          │");
 
         let mut sorted_explanations = result.explanation_lines.clone();
+
         sorted_explanations.sort_by(|a, b| {
-            b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal)
+            b.1.partial_cmp(&a.1)
+                .unwrap_or(std::cmp::Ordering::Equal)
         });
 
         if verbose {
             for (name, contrib) in &sorted_explanations {
                 println!(
                     "│ \u{2022} {:<40} {:>+7.1}           │",
-                    name, contrib
+                    name,
+                    contrib
                 );
             }
         } else {
             for (name, contrib) in sorted_explanations.iter().take(4) {
                 println!(
                     "│ \u{2022} {:<40} {:>+7.1}           │",
-                    name, contrib
+                    name,
+                    contrib
                 );
             }
         }
 
         println!("│                                                          │");
+
         println!(
             "│ Explanation: {}",
             generate_explanation(result)
         );
+
         println!("└──────────────────────────────────────────────────────────┘");
     } else {
         println!("│ Status:  Not an ELF binary                               │");
         println!("└──────────────────────────────────────────────────────────┘");
     }
+
     println!();
 }
 
@@ -137,6 +166,7 @@ fn generate_explanation(result: &ScanResult) -> String {
         .take(3)
         .map(|hr| hr.name.as_str())
         .collect();
+
     if parts.is_empty() {
         "No suspicious indicators found.".into()
     } else {
@@ -154,19 +184,24 @@ fn generate_explanation(result: &ScanResult) -> String {
 
 fn print_summary(results: &[ScanResult], verbose: bool) {
     let total = results.len();
+
     let elfs: Vec<&ScanResult> = results.iter().filter(|r| r.is_elf).collect();
+
     let malicious = elfs
         .iter()
         .filter(|r| r.classification == "Malicious")
         .count();
+
     let suspicious = elfs
         .iter()
         .filter(|r| r.classification == "Suspicious")
         .count();
+
     let benign = elfs
         .iter()
         .filter(|r| r.classification == "Benign")
         .count();
+
     let not_elf = total - elfs.len();
 
     println!(
@@ -202,6 +237,7 @@ fn main() {
             eprintln!("JSON serialization error: {}", e);
             std::process::exit(1);
         });
+
         println!("{}", json);
     } else {
         for result in &results {
@@ -209,6 +245,7 @@ fn main() {
                 display_result_text(result, args.verbose);
             }
         }
+
         print_summary(&results, args.verbose);
     }
 }
