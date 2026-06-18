@@ -22,9 +22,15 @@ pub struct ScanResult {
 }
 
 pub fn scan_file(path: &Path) -> Result<ScanResult, String> {
-    let data = std::fs::read(path).map_err(|e| format!("Cannot read {}: {}", path.display(), e))?;
+    let data =
+        std::fs::read(path).map_err(|e| format!("Cannot read {}: {}", path.display(), e))?;
 
-    if data.len() < 4 || data[0] != 0x7f || data[1] != b'E' || data[2] != b'L' || data[3] != b'F' {
+    if data.len() < 4
+        || data[0] != 0x7f
+        || data[1] != b'E'
+        || data[2] != b'L'
+        || data[3] != b'F'
+    {
         return Ok(ScanResult {
             path: path.to_path_buf(),
             file_size: data.len() as u64,
@@ -43,13 +49,17 @@ pub fn scan_file(path: &Path) -> Result<ScanResult, String> {
     let model = Model::default();
 
     let heuristic_results = run_heuristics(&features);
+
     let heuristic_total: f64 = heuristic_results.iter().map(|r| r.score).sum();
+
     let heuristic_normalized = (heuristic_total / 3.5).min(100.0);
 
     let ml_score = model.predict(&features);
+
     let explanation_lines = model.explain(&features);
 
     let combined_score = 0.4 * heuristic_normalized + 0.6 * ml_score;
+
     let classification = model.classify(combined_score).to_string();
 
     Ok(ScanResult {
@@ -68,6 +78,7 @@ pub fn scan_file(path: &Path) -> Result<ScanResult, String> {
 
 pub fn scan_paths(paths: &[PathBuf], recursive: bool) -> Vec<ScanResult> {
     let mut results = Vec::new();
+
     for path in paths {
         if path.is_dir() {
             let walker = if recursive {
@@ -75,7 +86,8 @@ pub fn scan_paths(paths: &[PathBuf], recursive: bool) -> Vec<ScanResult> {
             } else {
                 WalkDir::new(path).max_depth(1).into_iter()
             };
-            for entry in walker.filter_map(|e| e.ok()) {
+
+            for entry in walker.filter_map(Result::ok) {
                 if entry.file_type().is_file() {
                     match scan_file(entry.path()) {
                         Ok(r) => results.push(r),
@@ -92,5 +104,6 @@ pub fn scan_paths(paths: &[PathBuf], recursive: bool) -> Vec<ScanResult> {
             eprintln!("Warning: {} does not exist - skipping", path.display());
         }
     }
+
     results
 }
