@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::convert::TryFrom;
 
 use goblin::elf::Elf;
 
@@ -149,6 +150,13 @@ pub fn has_suspicious_section_names(
     false
 }
 
+fn slice_from_range(data: &[u8], offset: u64, size: u64) -> Option<&[u8]> {
+    let start = usize::try_from(offset).ok()?;
+    let size = usize::try_from(size).ok()?;
+    let end = start.checked_add(size)?;
+    data.get(start..end)
+}
+
 pub fn extract_features(data: &[u8]) -> Result<ElfFeatures, String> {
     let elf = Elf::parse(data).map_err(|e| format!("ELF parse error: {}", e))?;
 
@@ -179,15 +187,7 @@ pub fn extract_features(data: &[u8]) -> Result<ElfFeatures, String> {
                 false
             }
         })
-        .and_then(|sh| {
-            let start = sh.sh_offset as usize;
-            let end = start + sh.sh_size as usize;
-            if end <= data.len() {
-                Some(&data[start..end])
-            } else {
-                None
-            }
-        });
+        .and_then(|sh| slice_from_range(data, sh.sh_offset, sh.sh_size));
     let text_entropy = text_data.map(shannon_entropy).unwrap_or(0.0);
 
     let overall_entropy = shannon_entropy(data);
@@ -203,7 +203,7 @@ pub fn extract_features(data: &[u8]) -> Result<ElfFeatures, String> {
         .iter()
         .filter(|sh| sh.sh_type != goblin::elf::section_header::SHT_NOBITS)
         .filter_map(|sh| sh.sh_offset.checked_add(sh.sh_size))
-        .map(|end| end as usize)
+        .filter_map(|end| usize::try_from(end).ok())
         .max()
         .unwrap_or(0);
 
@@ -214,12 +214,18 @@ pub fn extract_features(data: &[u8]) -> Result<ElfFeatures, String> {
             ph.p_type == goblin::elf::program_header::PT_LOAD && ph.p_filesz > 0
         })
         .filter_map(|ph| ph.p_offset.checked_add(ph.p_filesz))
-        .map(|end| end as usize)
+        .filter_map(|end| usize::try_from(end).ok())
         .max()
         .unwrap_or(0);
 
-    let shdr_table_end = elf.header.e_shoff as usize
-        + elf.header.e_shnum as usize * elf.header.e_shentsize as usize;
+    let shdr_table_end = elf
+        .header
+        .e_shoff
+        .checked_add(
+            (elf.header.e_shnum as u64).checked_mul(elf.header.e_shentsize as u64).unwrap_or(0),
+        )
+        .and_then(|end| usize::try_from(end).ok())
+        .unwrap_or(0);
 
     let overlay_start = max_section_end.max(max_ph_end).max(shdr_table_end);
     let has_overlay = overlay_start < data.len();
@@ -231,13 +237,14 @@ pub fn extract_features(data: &[u8]) -> Result<ElfFeatures, String> {
 
     let entry_in_header = elf.entry <= 0x100;
 
+    let file_len_u64 = data.len() as u64;
     let mut num_section_anomalies = 0;
     for sh in &elf.section_headers {
-        if sh.sh_size > data.len() as u64 {
-            num_section_anomalies += 1;
-        }
-        if sh.sh_type != goblin::elf::section_header::SHT_NOBITS && sh.sh_offset > data.len() as u64 {
-            num_section_anomalies += 1;
+        if sh.sh_type != goblin::elf::section_header::SHT_NOBITS {
+            match sh.sh_offset.checked_add(sh.sh_size) {
+                Some(end) if end <= file_len_u64 => {}
+                _ => num_section_anomalies += 1,
+            }
         }
         if sh.sh_addr < 64 && sh.sh_size > 0
             && sh.sh_flags & goblin::elf::section_header::SHF_ALLOC as u64 != 0
